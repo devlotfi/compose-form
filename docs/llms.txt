@@ -1,0 +1,15 @@
+# compose-form
+
+compose-form is a small, validation-agnostic form state library for Jetpack Compose and Compose Multiplatform, inspired by Formik. Forms are declared as classes, with fields exposing observable value, error, and touched state. The library supports validation on change, blur, submit, or manually, and integrates with any validation library through a small validation bridge.
+
+## Documentation
+
+- [Introduction](https://devlotfi.github.io/compose-form/intro.md): Project overview, features, installation, and mental model.
+- [Getting started](https://devlotfi.github.io/compose-form/getting-started.md): Build and connect a form to a Compose UI.
+- [API reference](https://devlotfi.github.io/compose-form/api-reference.md): Core form, field, and `Modifier.onBlur` APIs.
+- [Setting up a validator](https://devlotfi.github.io/compose-form/validators.md): Implement the validator bridge with Konform, Kanyon, or custom rules.
+- [Validation behaviour](https://devlotfi.github.io/compose-form/validation-behaviour.md): Validation timing, touched state, error display, and cross-field or server errors.
+- [Nested fields](https://devlotfi.github.io/compose-form/nested-fields.md): Model nested objects and sub-forms.
+- [Lists of fields](https://devlotfi.github.io/compose-form/lists.md): Handle primitive lists, object lists, and dynamic lists of sub-forms.
+- [Compose UI patterns](https://devlotfi.github.io/compose-form/compose-ui-patterns.md): Reusable field components, ViewModel usage, and asynchronous submission.
+- [Recipes, gotchas & FAQ](https://devlotfi.github.io/compose-form/recipes-and-gotchas.md): End-to-end examples and common pitfalls.
