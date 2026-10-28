@@ -1,80 +1,92 @@
 # compose-form
 
-A small, **validation-agnostic** form state library for Jetpack / Compose Multiplatform, inspired by Formik.
+A small, **validation-agnostic** form state library for Jetpack Compose / Compose Multiplatform, in the spirit of Formik.
 
-You describe a form as a class, each field becomes an observable piece of Compose state
-(`value`, `error`, `touched`), and you plug in *any* validation library by implementing a single method.
+You describe a form as a plain Kotlin class. Each field is a property delegate that holds its own **value**, **error** and **schema**. Compose reads those properties and recomposes automatically; there is no `StateFlow` plumbing, no reducers and no form-wide `Map<String, Any>`.
 
 ```kotlin
-class LoginForm(private val onValid: (String, String) -> Unit) : KanyonFormDefinition() {
-    val email by formField("") { FieldSchema().string().notBlank("Required").email("Invalid email").build() }
-    val password by formField("") { FieldSchema().string().min(8, "At least 8 characters").build() }
+class LoginForm : KonformFormDefinition() {
+    val email by formField("") {
+        Validation<String> { notBlank() }
+    }
+    val password by formField("") {
+        Validation<String> { minLength(8) }
+    }
 
-    override fun onSubmit() = onValid(email.value, password.value)
+    override fun onSubmit() {
+        println("Logging in as ${email.value}")
+    }
 }
 
 @Composable
 fun LoginScreen() {
-    val form = remember { LoginForm { email, password -> /* call your API */ } }
+    val form = remember { LoginForm() }
 
-    OutlinedTextField(
-        value = form.email.value,
-        onValueChange = { form.email.value = it },
-        isError = form.email.touched && form.email.error != null,
-        supportingText = { if (form.email.touched) form.email.error?.let { Text(it) } },
-        modifier = Modifier.onBlur { form.email.blur() }
-    )
-    // ... password field ...
-    Button(onClick = { form.submit() }) { Text("Log in") }
+    Column {
+        OutlinedTextField(
+            modifier = Modifier.onBlur { form.email.blur() },
+            value = form.email.value,
+            onValueChange = { form.email.value = it },
+            isError = form.email.error != null,
+            supportingText = form.email.error?.let { { Text(it) } }
+        )
+        // ... password field ...
+        Button(onClick = { form.submit() }) { Text("Log in") }
+    }
 }
 ```
 
-## Features
+## Why compose-form?
 
-- Declarative field definitions with property delegates (`by formField(...)`)
-- Reactive `value`, `error` and `touched` per field, backed by Compose `mutableStateOf`
-- Validate on change, on blur, on submit, or manually
-- `Modifier.onBlur` to detect when a field loses focus
-- Works with **any** validator: Konform, Kanyon, your own rules, ...
-- Nested objects, lists, and lists of sub-forms through simple composition patterns
-- Zero dependency on `ViewModel`, coroutines or any UI toolkit besides Compose runtime / UI
+| Feature | Notes |
+|---|---|
+| Typed fields | `FormFieldData<String, *>`, `FormFieldData<Int, *>`, `FormFieldData<List<String>, *>`: the value type is whatever you declare. |
+| Validation agnostic | Plug in Konform, Kanyon, or your own validator by implementing one function (`validateField`). |
+| Validate on change / on blur / on submit | Configure per form. |
+| Nested forms | Group fields into sub-forms (`AddressForm`, `ContactForm`, ...). |
+| Dynamic lists | Add and remove sub-forms at runtime with `mutableStateListOf`. |
+| Compose-native state | Values and errors are Compose `MutableState`; no extra collectors needed. |
+| Multiplatform friendly | Pure Kotlin + Compose; no platform APIs. |
 
 ## Documentation
 
-| # | File | What you will learn |
-|---|------|---------------------|
-| 1 | [Getting started](getting-started.md) | Core concepts, your first form, wiring it to the UI |
-| 2 | [API reference](api-reference.md) | `FormDefinition`, `FormFieldData`, `FormField`, `Modifier.onBlur` in detail |
-| 3 | [Setting up a validator](validators.md) | The `validateField` contract, **Konform**, **Kanyon**, writing your own |
-| 4 | [Validation behaviour](validation-behaviour.md) | `validateOnChange` / `validateOnBlur`, touched, showing errors, cross-field rules, server errors |
-| 5 | [Nested fields](nested-fields.md) | Object-valued fields and nested sub-forms |
-| 6 | [Lists of fields](lists.md) | Primitive lists, object lists, dynamic lists of sub-forms |
-| 7 | [Compose UI patterns](compose-ui-patterns.md) | Reusable field components, ViewModel usage, async submit |
-| 8 | [Recipes, gotchas & FAQ](recipes-and-gotchas.md) | Full examples and the sharp edges to know about |
+Read in order the first time, then jump around.
+
+| # | Page | What you will learn |
+|---|---|---|
+| 1 | [Getting started](getting-started.md) | Core concepts, your first form, wiring it to Compose, the `onBlur` modifier |
+| 2 | [Validation setup](validation-setup.md) | The `FormDefinition<S>` contract, **Konform**, **Kanyon**, and writing your own adapter |
+| 3 | [Fields and state](fields.md) | `FormFieldData` API, field types (text, number, checkbox, enum, list), validation timing, dynamic schemas |
+| 4 | [Nested forms](nested-forms.md) | Grouping fields into sub-forms and how they register with the root form |
+| 5 | [Dynamic lists](dynamic-lists.md) | Lists of sub-forms, add/remove, `dispose()`, lists of simple values |
+| 6 | [Submit and reset](submit-and-reset.md) | `validate()`, `submit()`, `onSubmit()`, `reset()`, async submit, loading state |
+| 7 | [Recipes](recipes.md) | Reusable field composables, cross-field validation, server errors, conditional fields, surviving configuration changes |
+| 8 | [API reference](api-reference.md) | Every public class, property and function |
+| 9 | [Limitations and gotchas](limitations.md) | Things that will surprise you, and the workarounds |
 
 ## Installation
 
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.devlotfi:composeform:<version>")
+    implementation("<group>:compose-form:<version>")
+
+    // pick the validator you want to use (optional, the core is validator-free)
+    implementation("io.konform:konform:<version>")                // for KonformFormDefinition
+    implementation("<kanyon-group>:kanyon:<version>")             // for KanyonFormDefinition
 }
 ```
 
-> Replace the coordinates/version with the ones you actually publish.
-> Package used in all examples: `com.github.devlotfi.composeform`.
+> Replace the coordinates above with your published artifacts. The code samples in these docs use the package `com.devlotfi.testlol.composeform`; adjust the imports to match your final package name.
 
-## Mental model in one minute
+## At a glance
 
+```text
+FormDefinition<S>              <- abstract base: holds fields, validate/submit/reset
+ ├─ KonformFormDefinition      <- S = io.konform.validation.Validation<*>
+ ├─ KanyonFormDefinition       <- S = kanyon FieldSchema
+ └─ YourOwnFormDefinition      <- S = anything you like
+
+FormFieldData<T, S>            <- one field: value, error, schema, blur(), validate(), reset()
+Modifier.onBlur { ... }        <- fires when a text field loses focus
 ```
-FormDefinition<S>            S = the type of your validation "schema"
- ├─ validateField(value, S?) ← you implement this (once per validator library)
- ├─ onSubmit()               ← you implement this (once per form)
- └─ fields: Map<String, FormFieldData>
-        └─ FormFieldData<T, S>: value · error · touched · schema · blur() · validate() · reset()
-```
-
-1. Pick a base class for your validator (`KonformFormDefinition`, `KanyonFormDefinition`, or your own).
-2. Subclass it for each form and declare fields with `formField(initialValue) { schema }`.
-3. Read/write `form.someField.value` in your composables, render `error` when `touched`.
-4. Call `form.submit()`. It validates every field and only calls `onSubmit()` when all are valid.

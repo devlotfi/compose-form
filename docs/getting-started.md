@@ -1,159 +1,175 @@
 # 1. Getting started
 
-This guide builds a complete login form from scratch. Examples use **Konform**; every example works identically
-with Kanyon or your own validator (see [Setting up a validator](validators.md)).
-
 ## Core concepts
 
-| Concept | Class | Role |
-|---------|-------|------|
-| Form | `FormDefinition<S>` | Holds the fields, knows how to validate, submit and reset them |
-| Field | `FormFieldData<T, S>` | Holds `value: T`, `error: String?`, `touched: Boolean` and an optional schema `S` |
-| Schema | `S` (your choice) | Whatever your validation library uses to describe rules for one field |
-| Validator bridge | `validateField(value, schema)` | The **only** place where the library touches your validation library |
+compose-form has only three building blocks.
 
-`S` is a type parameter of the form. A Konform form uses `S = Validation<*>`, a Kanyon form uses `S = FieldSchema`.
+### `FormDefinition<S>`
 
-## Step 1: Choose a base class
+An abstract class you extend. **Each subclass is one form** (or one group of fields inside a bigger form). It owns:
 
-Because the library is validation-agnostic, you first need a base class that bridges to your validator.
-Copy one of the ready-made ones from [Setting up a validator](validators.md):
+- the set of fields registered to it (`fields`),
+- the validation timing flags (`validateOnChange`, `validateOnBlur`),
+- the operations `validate()`, `submit()`, `reset()` and `dispose()`,
+- the hook `onSubmit()` that you override.
+
+`S` is the **schema type** of your validation library. compose-form never looks inside a schema; it only hands it back to you through `validateField` (see [Validation setup](validation-setup.md)).
+
+### `FormFieldData<T, S>`
+
+The state of one field:
+
+| Member | Type | Description |
+|---|---|---|
+| `value` | `T` | Current value. **Setting it may trigger validation** (see `validateOnChange`). |
+| `error` | `String?` | Current error message, `null` when valid. Compose state. |
+| `schema` | `S?` | The schema used to validate this field. Compose state, can be replaced at runtime. |
+| `initialValue` | `T` | The value the field was created with. Used by `reset()`. |
+| `blur()` | | Call when the field loses focus. Validates if `validateOnBlur` is on. |
+| `validate()` | | Validate now, regardless of the flags. |
+| `reset()` | | Restore `initialValue` and clear the error. |
+
+### `formField(...)` delegate
+
+Declares a field inside a `FormDefinition`:
 
 ```kotlin
-abstract class KonformFormDefinition : FormDefinition<Validation<*>>() {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> validateField(value: T, schema: Validation<*>?): String? {
-        val result = (schema as? Validation<T>)?.validate(value)
-        val error = result?.errors?.firstOrNull()
-        return if (error != null) error.toString() else null
-    }
+val email by formField("") {            // initial value, then the schema block
+    Validation<String> { notBlank() }
 }
 ```
 
-You write this **once per project**, not once per form.
+The delegate creates the `FormFieldData`, registers it on the form (and on the root form, if any) and returns it. Because the property type is inferred from the initial value, `formField("")` is a `FormFieldData<String, S>` and `formField(0)` is a `FormFieldData<Int, S>`.
 
-## Step 2: Define your form
+## Your first form
+
+### 1. Pick a validator and create a base form
+
+For Konform you only need the adapter that ships with compose-form:
 
 ```kotlin
-import com.github.devlotfi.composeform.FormField
-import io.konform.validation.Validation
-import io.konform.validation.constraints.*
-
-class LoginForm(
-    private val onValid: (email: String, password: String) -> Unit
-) : KonformFormDefinition() {
+class SignUpForm : KonformFormDefinition() {
+    val username by formField("") {
+        Validation<String> {
+            notBlank()
+            minLength(3)
+        }
+    }
 
     val email by formField("") {
         Validation<String> {
-            minLength(1) hint "Email is required"
-            pattern(".+@.+\\..+") hint "Invalid email address"
+            notBlank()
+            pattern("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") hint "Invalid email"
         }
     }
-
-    val password by formField("") {
-        Validation<String> {
-            minLength(8) hint "Password must be at least 8 characters"
-        }
-    }
-
-    val rememberMe by formField(false)   // no schema: always valid
 
     override fun onSubmit() {
-        onValid(email.value, password.value)
+        // Only called when every field is valid
+        println("Creating ${username.value} <${email.value}>")
     }
 }
 ```
 
-What happened here:
+> Using Kanyon instead? Extend `KanyonFormDefinition` and write the schema with `FieldSchema()` (see [Validation setup](validation-setup.md#kanyon)).
 
-- `formField(initialValue) { schema }` is a **property delegate provider**. When the form is constructed it creates a
-  `FormFieldData`, registers it in `fields` under the **property name** (`"email"`, `"password"`, ...) and returns the
-  delegate.
-- The trailing lambda builds the schema. It is optional: a field without a schema never has an error.
-- `onSubmit()` is abstract. It is called by `submit()` only when every field is valid.
-- Reading `email` gives you a `FormFieldData<String, Validation<*>>`, **not** a `String`. Use `email.value`.
+### 2. Configure validation timing (optional)
 
-## Step 3: Use the form in Compose
+Both flags default to `true`. Change them in an `init` block:
+
+```kotlin
+class SignUpForm : KonformFormDefinition() {
+    init {
+        validateOnChange = false  // do not validate while typing
+        validateOnBlur = true     // validate when the user leaves the field
+    }
+    // fields...
+}
+```
+
+| `validateOnChange` | `validateOnBlur` | Behaviour |
+|---|---|---|
+| `true` | `true` | Errors appear while typing and when leaving the field. |
+| `false` | `true` | Errors appear when leaving the field (a common, friendly default for UX). |
+| `true` | `false` | Errors appear only while typing. |
+| `false` | `false` | Errors appear only after `validate()` / `submit()`. |
+
+### 3. Hold the form instance
+
+The form is a normal object. Keep it somewhere that survives recomposition:
+
+```kotlin
+// Simple screens
+val form = remember { SignUpForm() }
+
+// Screens that must survive configuration changes (rotation, process-kept state)
+class SignUpViewModel : ViewModel() {
+    val form = SignUpForm()
+}
+val form = viewModel<SignUpViewModel>().form
+```
+
+See [Recipes](recipes.md#keeping-the-form-alive) for more options.
+
+### 4. Bind fields to composables
 
 ```kotlin
 @Composable
-fun LoginScreen(onLoggedIn: (String, String) -> Unit) {
-    val form = remember { LoginForm(onLoggedIn) }
+fun SignUpScreen(viewModel: SignUpViewModel = viewModel()) {
+    val form = viewModel.form
 
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxSize().padding(16.dp)) {
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth().onBlur { form.username.blur() },
+            value = form.username.value,
+            onValueChange = { form.username.value = it },
+            label = { Text("Username") },
+            isError = form.username.error != null,
+            supportingText = form.username.error?.let { { Text(it) } }
+        )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth().onBlur { form.email.blur() },
             value = form.email.value,
             onValueChange = { form.email.value = it },
             label = { Text("Email") },
-            isError = form.email.touched && form.email.error != null,
-            supportingText = {
-                if (form.email.touched) form.email.error?.let { Text(it) }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onBlur { form.email.blur() }
+            isError = form.email.error != null,
+            supportingText = form.email.error?.let { { Text(it) } }
         )
 
-        OutlinedTextField(
-            value = form.password.value,
-            onValueChange = { form.password.value = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = form.password.touched && form.password.error != null,
-            supportingText = {
-                if (form.password.touched) form.password.error?.let { Text(it) }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onBlur { form.password.blur() }
-        )
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = form.rememberMe.value,
-                onCheckedChange = { form.rememberMe.value = it }
-            )
-            Text("Remember me")
-        }
-
-        Button(onClick = { form.submit() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Log in")
-        }
+        Button(onClick = { form.submit() }) { Text("Create account") }
     }
 }
 ```
 
-Key points:
+The pattern is always the same four lines:
 
-1. **Writing** `field.value = x` marks the field as touched and (by default) validates it immediately.
-2. **Showing errors**: always gate on `touched`. Every field is validated once when the form is created, so `error`
-   is already non-null for an empty required field, but you do not want to show it before the user interacts.
-3. **`Modifier.onBlur`** fires when a field that was focused loses focus. It calls `blur()` which marks the field as
-   touched and validates it (if `validateOnBlur` is on).
-4. **`submit()`** validates all fields, marks them all as touched (so every error becomes visible), and only calls
-   `onSubmit()` when there are no errors.
+| Compose parameter | Bind to |
+|---|---|
+| `value` | `field.value` |
+| `onValueChange` | `{ field.value = it }` |
+| `isError` / `supportingText` | `field.error` |
+| `Modifier.onBlur { }` | `field.blur()` |
 
-## Step 4: Reset
+Because `value` and `error` are backed by Compose state, reading them inside a composable subscribes that composable to changes. Nothing else is required.
+
+## The `onBlur` modifier
 
 ```kotlin
-TextButton(onClick = { form.reset() }) { Text("Clear") }
+fun Modifier.onBlur(onBlur: () -> Unit): Modifier
 ```
 
-`reset()` restores every field to its `initialValue`, clears errors and sets `touched = false`.
+Compose has no built-in "lost focus" callback. `onBlur` remembers whether the element was focused and calls your lambda on the **focused → unfocused** transition only. It does not fire on first composition or when the field is focused.
 
-## Remembering the form
+```kotlin
+OutlinedTextField(
+    modifier = Modifier.onBlur { form.email.blur() },
+    // ...
+)
+```
 
-| Where | How |
-|-------|-----|
-| Survives recomposition only | `val form = remember { LoginForm(...) }` |
-| Survives configuration change (Android) | Create it inside a `ViewModel`, or use `rememberSaveable` with a custom saver for the *values* |
-| Survives navigation back stack | Keep it in a `ViewModel` scoped to the nav entry |
+Apply it to the focusable element (`TextField`, `OutlinedTextField`, `BasicTextField`, or a custom `focusable()` component). Without it, `validateOnBlur` has no effect, because `blur()` is never called.
 
-See [Compose UI patterns](compose-ui-patterns.md#using-a-viewmodel) for a ViewModel example.
+## Next
 
-## Next steps
-
-- [API reference](api-reference.md)
-- [Validator setup (Konform, Kanyon, custom)](validators.md)
-- [Nested fields](nested-fields.md) and [lists](lists.md)
+- [Validation setup](validation-setup.md) to connect a validator
+- [Fields and state](fields.md) for every field type and the full field API

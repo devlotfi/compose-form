@@ -1,15 +1,16 @@
-# compose-form
+# Compose Form
 
-compose-form is a small, validation-agnostic form state library for Jetpack Compose and Compose Multiplatform, inspired by Formik. Forms are declared as classes, with fields exposing observable value, error, and touched state. The library supports validation on change, blur, submit, or manually, and integrates with any validation library through a small validation bridge.
+Compose Form is a small, validation-agnostic form state library for Jetpack Compose and Compose Multiplatform. It lets you define forms as Kotlin classes with typed, observable fields, integrate any validation library, and build nested forms and dynamic lists.
 
 ## Documentation
 
-- [Introduction](https://devlotfi.github.io/compose-form/intro.md): Project overview, features, installation, and mental model.
-- [Getting started](https://devlotfi.github.io/compose-form/getting-started.md): Build and connect a form to a Compose UI.
-- [API reference](https://devlotfi.github.io/compose-form/api-reference.md): Core form, field, and `Modifier.onBlur` APIs.
-- [Setting up a validator](https://devlotfi.github.io/compose-form/validators.md): Implement the validator bridge with Konform, Kanyon, or custom rules.
-- [Validation behaviour](https://devlotfi.github.io/compose-form/validation-behaviour.md): Validation timing, touched state, error display, and cross-field or server errors.
-- [Nested fields](https://devlotfi.github.io/compose-form/nested-fields.md): Model nested objects and sub-forms.
-- [Lists of fields](https://devlotfi.github.io/compose-form/lists.md): Handle primitive lists, object lists, and dynamic lists of sub-forms.
-- [Compose UI patterns](https://devlotfi.github.io/compose-form/compose-ui-patterns.md): Reusable field components, ViewModel usage, and asynchronous submission.
-- [Recipes, gotchas & FAQ](https://devlotfi.github.io/compose-form/recipes-and-gotchas.md): End-to-end examples and common pitfalls.
+- [Introduction](https://devlotfi.github.io/compose-form/intro.md): Library overview, key features, installation, and documentation map.
+- [Getting started](https://devlotfi.github.io/compose-form/getting-started.md): Core concepts, first form, Compose bindings, and blur handling.
+- [Validation setup](https://devlotfi.github.io/compose-form/validation-setup.md): Form validation contract and adapters for Konform, Kanyon, or custom validators.
+- [Fields and state](https://devlotfi.github.io/compose-form/fields.md): Field declaration, observable state, supported value types, validation timing, and dynamic schemas.
+- [Nested forms](https://devlotfi.github.io/compose-form/nested-forms.md): Group fields into sub-forms and register them with a parent form.
+- [Dynamic lists](https://devlotfi.github.io/compose-form/dynamic-lists.md): Add, remove, and manage lists of sub-forms or simple values.
+- [Submit and reset](https://devlotfi.github.io/compose-form/submit-and-reset.md): Validate and submit forms, reset fields, handle async submission, and dispose sub-forms.
+- [Recipes](https://devlotfi.github.io/compose-form/recipes.md): Reusable field components and practical patterns for cross-field validation, server errors, and form lifecycle.
+- [API reference](https://devlotfi.github.io/compose-form/api-reference.md): Public classes, properties, functions, adapters, and lifecycle behavior.
+- [Limitations and gotchas](https://devlotfi.github.io/compose-form/limitations.md): Known constraints, workarounds, and potential improvements.

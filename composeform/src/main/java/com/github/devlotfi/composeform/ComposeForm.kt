@@ -24,30 +24,23 @@ fun Modifier.onBlur(
 }
 
 class FormFieldData<T, S>(
-    var initialValue: T,
+    val initialValue: T,
     error: String?,
     touched: Boolean = false,
     schema: S?,
     val thisRef: FormDefinition<S>
 ) {
     var error by mutableStateOf(error)
-    var touched by mutableStateOf(touched)
     var schema by mutableStateOf(schema)
     private val _value = mutableStateOf(initialValue)
     var value: T
         get() = _value.value
         set(value) {
-            touched = true
             _value.value = value
             if (thisRef.validateOnChange) validate()
         }
 
-    init {
-        validate()
-    }
-
     fun blur() {
-        touched = true
         if (thisRef.validateOnBlur) validate()
     }
 
@@ -58,22 +51,23 @@ class FormFieldData<T, S>(
     fun reset() {
         value = initialValue
         error = null
-        touched = false
     }
 }
 
-class FormField<T, S>() : ReadOnlyProperty<FormDefinition<S>, FormFieldData<T, S>> {
+class FormField<T, S>(val fieldData: FormFieldData<T, S>) :
+    ReadOnlyProperty<FormDefinition<S>, FormFieldData<T, S>> {
     @Suppress("UNCHECKED_CAST")
     override fun getValue(thisRef: FormDefinition<S>, property: KProperty<*>): FormFieldData<T, S> {
-        return thisRef.fields[property.name] as FormFieldData<T, S>
+        return fieldData
     }
 }
 
 abstract class FormDefinition<S>(
     var validateOnChange: Boolean = true,
-    var validateOnBlur: Boolean = true
+    var validateOnBlur: Boolean = true,
+    val root: FormDefinition<S>? = null
 ) {
-    val fields = mutableMapOf<String, FormFieldData<*, *>>()
+    val fields = mutableSetOf<FormFieldData<*, *>>()
 
     fun <T> formField(
         initialValue: T,
@@ -89,31 +83,35 @@ abstract class FormDefinition<S>(
                 schema = if (schemaBlock != null) schemaBlock() else null,
                 thisRef = thisRef
             )
-            val formField = FormField<T, S>()
-            fields[property.name] = formFieldData
+            val formField = FormField<T, S>(formFieldData)
+            if (root != null) root.fields.add(formFieldData)
+            fields.add(formFieldData)
             return@PropertyDelegateProvider formField
         }
 
     abstract fun <T> validateField(value: T, schema: S?): String?
-    abstract fun onSubmit()
+    open fun onSubmit() {}
 
-    fun validate(): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        fields.forEach { (key, field) ->
+    fun validate(): Boolean {
+        var valid = true
+        fields.forEach { field ->
             field.validate()
-            field.touched = true
-            if (field.error != null) map[key] = field.error as String
+            if (field.error != null) valid = false
         }
-        return map
+        return valid
     }
 
     fun submit() {
-        if (validate().isEmpty()) onSubmit()
+        if (validate()) onSubmit()
     }
 
     fun reset() {
-        fields.forEach { (_, field) ->
+        fields.forEach { field ->
             field.reset()
         }
+    }
+
+    fun dispose() {
+        if (root != null) root.fields.removeAll(fields)
     }
 }
