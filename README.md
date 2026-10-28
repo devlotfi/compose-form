@@ -22,7 +22,7 @@ Compose Form is published on [JitPack](https://jitpack.io/#devlotfi/compose-form
 
 ## Documentation
 
-- [Docs](https://github.com/devlotfi/compose-form/blob/master/docs/intro.md)
+- [Docs](https://github.com/devlotfi/compose-form/blob/main/docs/intro.md)
 - [llms.txt](https://devlotfi.github.io/compose-form/llms.txt)
 
 ## Quick start
