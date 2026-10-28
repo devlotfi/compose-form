@@ -10,9 +10,9 @@ A small, validation-agnostic form state library for Jetpack Compose and Compose 
 ## Features
 
 - Declarative field definitions with Kotlin property delegates
-- Reactive `value`, `error`, and `touched` state backed by Compose
+- Reactive `value`, `error`, and `schema` state backed by Compose
 - Validate fields on change, blur, submit, or manually
-- Integrate with any validation library—or write your own rules
+- Integrate with any validation library (Konform, Kanyon, ...) or write your own rules
 - Compose-friendly nested fields, lists, and sub-forms
 - `Modifier.onBlur` for detecting when a field loses focus
 
