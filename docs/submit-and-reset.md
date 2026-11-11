@@ -6,7 +6,9 @@
 fun validate(): Boolean
 ```
 
-Validates **every field registered on the form** (including fields of sub-forms that registered on it), sets each field's `error`, and returns `true` only if all are valid. It does **not** call `onSubmit()`.
+Validates **every field registered on the form** (including fields of sub-forms that registered on
+it), sets each field's `error`, and returns `true` only if all are valid. It does **not** call
+`onSubmit()`.
 
 ```kotlin
 if (form.validate()) { /* every field is valid */ }
@@ -14,7 +16,8 @@ if (form.validate()) { /* every field is valid */ }
 
 Use it for step-by-step wizards, enabling an action only when valid, or custom submit flows.
 
-> `validate()` always runs all fields (it does not stop at the first failure), so all errors show at once.
+> `validate()` always runs all fields (it does not stop at the first failure), so all errors show at
+> once.
 
 ## `submit()` and `onSubmit()`
 
@@ -58,7 +61,8 @@ val form = remember { LoginForm { email, password -> viewModel.login(email, pass
 
 ### Async submit and loading state
 
-`onSubmit()` is synchronous and the form has no coroutine scope. Do the async work in your ViewModel and track loading yourself:
+`onSubmit()` is synchronous and the form has no coroutine scope. Do the async work in your ViewModel
+and track loading yourself:
 
 ```kotlin
 class SignUpViewModel : ViewModel() {
@@ -104,7 +108,8 @@ OutlinedTextField(
 fun reset()
 ```
 
-Calls `reset()` on every registered field: the value goes back to `initialValue` and the error is cleared.
+Calls `reset()` on every registered field: the value goes back to `initialValue` and the error is
+cleared.
 
 ```kotlin
 Button(onClick = { form.reset() }) { Text("Clear") }
@@ -112,8 +117,11 @@ Button(onClick = { form.reset() }) { Text("Clear") }
 
 Details worth knowing:
 
-- Field `reset()` sets the value first and then clears the error. If `validateOnChange` is on, the value assignment triggers validation, but the error is cleared right after, so the form comes back clean.
-- `reset()` on a form restores **fields only**. It does not remove or re-create items in a [dynamic list](dynamic-lists.md).
+- Field `reset()` sets the value first and then clears the error. If `validateOnChange` is on, the
+  value assignment triggers validation, but the error is cleared right after, so the form comes back
+  clean.
+- `reset()` on a form restores **fields only**. It does not remove or re-create items in
+  a [dynamic list](dynamic-lists.md).
 
 ### Resetting a form with a dynamic list
 
@@ -153,11 +161,16 @@ form.email.reset()
 fun dispose()
 ```
 
-Unregisters the form's fields from its root. It is meant for sub-forms that are discarded (list items). Calling it on a top-level form does nothing, since there is no root. See [Dynamic lists](dynamic-lists.md#why-dispose-is-required).
+Unregisters the form's fields from its root. It is meant for sub-forms that are discarded (list
+items). Calling it on a top-level form does nothing, since there is no root.
+See [Dynamic lists](dynamic-lists.md#why-dispose-is-required).
 
 ## Checking validity without showing errors
 
-`validate()` always writes errors into the fields, and there is currently no side-effect-free "is this valid?" check. If you need to enable/disable a button based on validity, either keep the button enabled and show errors on press (the intended flow), or see the suggestions in [Limitations](limitations.md).
+`validate()` always writes errors into the fields, and there is currently no side-effect-free "is
+this valid?" check. If you need to enable/disable a button based on validity, either keep the button
+enabled and show errors on press (the intended flow), or see the suggestions
+in [Limitations](limitations.md).
 
 ## Next
 

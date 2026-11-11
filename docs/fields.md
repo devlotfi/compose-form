@@ -11,10 +11,10 @@ val name by formField(
 }
 ```
 
-| Parameter | Description |
-|---|---|
-| `initialValue` | Starting value; also what `reset()` restores. Its type becomes `T`. |
-| `error` | Optional starting error. Useful for pre-filling server-side errors. |
+| Parameter       | Description                                                           |
+|-----------------|-----------------------------------------------------------------------|
+| `initialValue`  | Starting value; also what `reset()` restores. Its type becomes `T`.   |
+| `error`         | Optional starting error. Useful for pre-filling server-side errors.   |
 | trailing lambda | Returns the schema. Optional: omit it for a field with no validation. |
 
 A field without a schema is valid and never produces an error:
@@ -23,7 +23,9 @@ A field without a schema is valid and never produces an error:
 val notes by formField("")   // no validation
 ```
 
-> The schema block runs **once**, when the field is created. Inside it you can reference other properties of the form (see [cross-field validation](recipes.md#cross-field-validation)), but the schema *object* is built a single time.
+> The schema block runs **once**, when the field is created. Inside it you can reference other
+> properties of the form (see [cross-field validation](recipes.md#cross-field-validation)), but the
+> schema *object* is built a single time.
 
 ## Reading and writing values
 
@@ -45,17 +47,20 @@ form.name.error = "Taken"  // you can set an error manually (e.g. from a server)
 
 ## Validation timing in detail
 
-| Trigger | Condition | Effect |
-|---|---|---|
-| `field.value = x` | `form.validateOnChange == true` | `validate()` runs after the value is stored |
-| `field.blur()` | `form.validateOnBlur == true` | `validate()` runs |
-| `field.validate()` | always | validates this field right now |
-| `form.validate()` | always | validates **all** registered fields |
-| `form.submit()` | always | `form.validate()`, then `onSubmit()` if all valid |
+| Trigger            | Condition                       | Effect                                            |
+|--------------------|---------------------------------|---------------------------------------------------|
+| `field.value = x`  | `form.validateOnChange == true` | `validate()` runs after the value is stored       |
+| `field.blur()`     | `form.validateOnBlur == true`   | `validate()` runs                                 |
+| `field.validate()` | always                          | validates this field right now                    |
+| `form.validate()`  | always                          | validates **all** registered fields               |
+| `form.submit()`    | always                          | `form.validate()`, then `onSubmit()` if all valid |
 
-`validateOnChange`/`validateOnBlur` are read from the form that **declares the field**. In a [sub-form](nested-forms.md) that is the sub-form, not the root, so each sub-form has its own flags.
+`validateOnChange`/`validateOnBlur` are read from the form that **declares the field**. In
+a [sub-form](nested-forms.md) that is the sub-form, not the root, so each sub-form has its own
+flags.
 
-A common UX pattern is "don't nag while typing, but validate on blur, and re-validate on change once an error is showing". You can get this with a small amount of glue code:
+A common UX pattern is "don't nag while typing, but validate on blur, and re-validate on change once
+an error is showing". You can get this with a small amount of glue code:
 
 ```kotlin
 class SignUpForm : KonformFormDefinition() {
@@ -80,7 +85,8 @@ OutlinedTextField(
 
 ## Field types
 
-The field type is whatever you pass as `initialValue`. All examples below use Konform; with Kanyon swap in the equivalent `FieldSchema()` chain.
+The field type is whatever you pass as `initialValue`. All examples below use Konform; with Kanyon
+swap in the equivalent `FieldSchema()` chain.
 
 ### Text
 
@@ -101,7 +107,8 @@ fun TitleInput(form: PostForm) = OutlinedTextField(
 
 Keep the **form value typed** and convert at the UI edge. Two approaches:
 
-**A. Store the number as text, parse on submit.** Simplest, and the user can type partial input like `"1."`.
+**A. Store the number as text, parse on submit.** Simplest, and the user can type partial input like
+`"1."`.
 
 ```kotlin
 val price by formField("") {
@@ -135,7 +142,8 @@ OutlinedTextField(
 )
 ```
 
-Option B cannot represent an empty text box. Use a nullable type (`formField<Int?>(null)`) if you need that:
+Option B cannot represent an empty text box. Use a nullable type (`formField<Int?>(null)`) if you
+need that:
 
 ```kotlin
 val quantity by formField<Int?>(null) {
@@ -145,7 +153,8 @@ val quantity by formField<Int?>(null) {
 }
 ```
 
-> Kanyon users: `Int?` fields need `.nullable()` and then rules are skipped for `null`, so add a required check yourself or keep the field non-null.
+> Kanyon users: `Int?` fields need `.nullable()` and then rules are skipped for `null`, so add a
+> required check yourself or keep the field non-null.
 
 ### Boolean (checkbox, switch)
 
@@ -215,7 +224,8 @@ ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }
 
 ### Collections of simple values
 
-A field can hold an immutable `List`. Always **replace** the list (never mutate it), so the state change is observed.
+A field can hold an immutable `List`. Always **replace** the list (never mutate it), so the state
+change is observed.
 
 ```kotlin
 val tags by formField(emptyList<String>()) {

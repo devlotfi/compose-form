@@ -29,7 +29,8 @@ fun FormTextField(
 }
 ```
 
-`FormFieldData<String, *>` uses a star projection for the schema type, so the same composable works with Konform, Kanyon, or any custom adapter.
+`FormFieldData<String, *>` uses a star projection for the schema type, so the same composable works
+with Konform, Kanyon, or any custom adapter.
 
 Usage:
 
@@ -80,7 +81,8 @@ class RegisterForm : KonformFormDefinition() {
 }
 ```
 
-The confirm field is only re-validated when *it* changes. Re-validate it when the password changes too:
+The confirm field is only re-validated when *it* changes. Re-validate it when the password changes
+too:
 
 ```kotlin
 OutlinedTextField(
@@ -117,7 +119,8 @@ class RegisterForm : KanyonFormDefinition() {
 
 Call `form.trySubmit()` from the button instead of `form.submit()`.
 
-(Kanyon also offers custom validation handlers and `ValidatedObject` for cross-field rules; see <https://devlotfi.github.io/kanyon/custom-validation.md>.)
+(Kanyon also offers custom validation handlers and `ValidatedObject` for cross-field rules;
+see <https://devlotfi.github.io/kanyon/custom-validation.md>.)
 
 ## Server-side errors
 
@@ -130,7 +133,9 @@ fun onServerError(response: ApiError) {
 }
 ```
 
-The error stays until that field is validated again. With `validateOnChange = true` it disappears as soon as the user edits the field, which is usually what you want. Do not call `form.validate()` after setting server errors, because it would overwrite them.
+The error stays until that field is validated again. With `validateOnChange = true` it disappears as
+soon as the user edits the field, which is usually what you want. Do not call `form.validate()`
+after setting server errors, because it would overwrite them.
 
 ## Conditional fields
 
@@ -153,7 +158,8 @@ if (form.isCompany.value) {
 }
 ```
 
-Hidden fields stay registered, so setting `schema = null` is what keeps them from blocking submit. For whole groups, use a sub-form and `dispose()` it:
+Hidden fields stay registered, so setting `schema = null` is what keeps them from blocking submit.
+For whole groups, use a sub-form and `dispose()` it:
 
 ```kotlin
 var company: CompanyForm? by mutableStateOf(null)
@@ -164,7 +170,8 @@ fun disableCompany() { company?.dispose(); company = null }
 
 ## Edit screens: pre-filling from existing data
 
-Pass data to the form's constructor and use it as `initialValue`. `reset()` then returns to the loaded values:
+Pass data to the form's constructor and use it as `initialValue`. `reset()` then returns to the
+loaded values:
 
 ```kotlin
 class EditProfileForm(user: User, private val onSave: (User) -> Unit) : KonformFormDefinition() {
@@ -181,16 +188,18 @@ Keying `remember` on `user.id` creates a fresh form if a different user is opene
 
 ## Keeping the form alive
 
-| Need | Use |
-|---|---|
-| Survive recomposition only | `remember { MyForm() }` |
-| Survive rotation / configuration change | Create the form in a `ViewModel` and expose it |
+| Need                                                      | Use                                                                                                    |
+|-----------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| Survive recomposition only                                | `remember { MyForm() }`                                                                                |
+| Survive rotation / configuration change                   | Create the form in a `ViewModel` and expose it                                                         |
 | Survive navigation (back stack), keep what the user typed | Keep the instance in a ViewModel scoped to the navigation entry or in a store that outlives the screen |
-| Survive process death | Persist the raw values yourself (e.g. `SavedStateHandle`) and re-create the form with them |
+| Survive process death                                     | Persist the raw values yourself (e.g. `SavedStateHandle`) and re-create the form with them             |
 
-`rememberSaveable` cannot store a form directly because it is not a `Parcelable`/`Saver`-friendly type. Save the *values* instead.
+`rememberSaveable` cannot store a form directly because it is not a `Parcelable`/`Saver`-friendly
+type. Save the *values* instead.
 
-If you use a small keyed store like the one in the playground project, the pattern is simply "get or create the form for this screen":
+If you use a small keyed store like the one in the playground project, the pattern is simply "get or
+create the form for this screen":
 
 ```kotlin
 val form by viewModel.dataStore.rememberValueInDataStore("HomeScreen") { MainForm() }
@@ -198,7 +207,8 @@ val form by viewModel.dataStore.rememberValueInDataStore("HomeScreen") { MainFor
 
 ## Testing forms without Compose
 
-Forms are plain Kotlin classes, and `value`/`error` are ordinary snapshot state, so they can be unit-tested directly:
+Forms are plain Kotlin classes, and `value`/`error` are ordinary snapshot state, so they can be
+unit-tested directly:
 
 ```kotlin
 class LoginFormTest {
@@ -224,7 +234,8 @@ class LoginFormTest {
 
 ## Showing a summary of all errors
 
-`FormFieldData` instances are stored in `fields`, but that set is not observable. Collect the errors you care about explicitly:
+`FormFieldData` instances are stored in `fields`, but that set is not observable. Collect the errors
+you care about explicitly:
 
 ```kotlin
 val errors get() = listOfNotNull(firstName.error, lastName.error, email.error)
@@ -248,7 +259,8 @@ Button(onClick = {
 }) { Text("Save") }
 ```
 
-For per-field scrolling, use `BringIntoViewRequester` on each field and call `bringIntoView()` for the first one with a non-null `error`.
+For per-field scrolling, use `BringIntoViewRequester` on each field and call `bringIntoView()` for
+the first one with a non-null `error`.
 
 ## Full example: a profile form with a contact list
 

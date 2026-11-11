@@ -6,28 +6,30 @@ compose-form has only three building blocks.
 
 ### `FormDefinition<S>`
 
-An abstract class you extend. **Each subclass is one form** (or one group of fields inside a bigger form). It owns:
+An abstract class you extend. **Each subclass is one form** (or one group of fields inside a bigger
+form). It owns:
 
 - the set of fields registered to it (`fields`),
 - the validation timing flags (`validateOnChange`, `validateOnBlur`),
 - the operations `validate()`, `submit()`, `reset()` and `dispose()`,
 - the hook `onSubmit()` that you override.
 
-`S` is the **schema type** of your validation library. compose-form never looks inside a schema; it only hands it back to you through `validateField` (see [Validation setup](validation-setup.md)).
+`S` is the **schema type** of your validation library. compose-form never looks inside a schema; it
+only hands it back to you through `validateField` (see [Validation setup](validation-setup.md)).
 
 ### `FormFieldData<T, S>`
 
 The state of one field:
 
-| Member | Type | Description |
-|---|---|---|
-| `value` | `T` | Current value. **Setting it may trigger validation** (see `validateOnChange`). |
-| `error` | `String?` | Current error message, `null` when valid. Compose state. |
-| `schema` | `S?` | The schema used to validate this field. Compose state, can be replaced at runtime. |
-| `initialValue` | `T` | The value the field was created with. Used by `reset()`. |
-| `blur()` | | Call when the field loses focus. Validates if `validateOnBlur` is on. |
-| `validate()` | | Validate now, regardless of the flags. |
-| `reset()` | | Restore `initialValue` and clear the error. |
+| Member         | Type      | Description                                                                        |
+|----------------|-----------|------------------------------------------------------------------------------------|
+| `value`        | `T`       | Current value. **Setting it may trigger validation** (see `validateOnChange`).     |
+| `error`        | `String?` | Current error message, `null` when valid. Compose state.                           |
+| `schema`       | `S?`      | The schema used to validate this field. Compose state, can be replaced at runtime. |
+| `initialValue` | `T`       | The value the field was created with. Used by `reset()`.                           |
+| `blur()`       |           | Call when the field loses focus. Validates if `validateOnBlur` is on.              |
+| `validate()`   |           | Validate now, regardless of the flags.                                             |
+| `reset()`      |           | Restore `initialValue` and clear the error.                                        |
 
 ### `formField(...)` delegate
 
@@ -39,7 +41,9 @@ val email by formField("") {            // initial value, then the schema block
 }
 ```
 
-The delegate creates the `FormFieldData`, registers it on the form (and on the root form, if any) and returns it. Because the property type is inferred from the initial value, `formField("")` is a `FormFieldData<String, S>` and `formField(0)` is a `FormFieldData<Int, S>`.
+The delegate creates the `FormFieldData`, registers it on the form (and on the root form, if any)
+and returns it. Because the property type is inferred from the initial value, `formField("")` is a
+`FormFieldData<String, S>` and `formField(0)` is a `FormFieldData<Int, S>`.
 
 ## Your first form
 
@@ -70,7 +74,8 @@ class SignUpForm : KonformFormDefinition() {
 }
 ```
 
-> Using Kanyon instead? Extend `KanyonFormDefinition` and write the schema with `FieldSchema()` (see [Validation setup](validation-setup.md#kanyon)).
+> Using Kanyon instead? Extend `KanyonFormDefinition` and write the schema with `FieldSchema()`
+> (see [Validation setup](validation-setup.md#kanyon)).
 
 ### 2. Configure validation timing (optional)
 
@@ -86,12 +91,12 @@ class SignUpForm : KonformFormDefinition() {
 }
 ```
 
-| `validateOnChange` | `validateOnBlur` | Behaviour |
-|---|---|---|
-| `true` | `true` | Errors appear while typing and when leaving the field. |
-| `false` | `true` | Errors appear when leaving the field (a common, friendly default for UX). |
-| `true` | `false` | Errors appear only while typing. |
-| `false` | `false` | Errors appear only after `validate()` / `submit()`. |
+| `validateOnChange` | `validateOnBlur` | Behaviour                                                                 |
+|--------------------|------------------|---------------------------------------------------------------------------|
+| `true`             | `true`           | Errors appear while typing and when leaving the field.                    |
+| `false`            | `true`           | Errors appear when leaving the field (a common, friendly default for UX). |
+| `true`             | `false`          | Errors appear only while typing.                                          |
+| `false`            | `false`          | Errors appear only after `validate()` / `submit()`.                       |
 
 ### 3. Hold the form instance
 
@@ -143,14 +148,15 @@ fun SignUpScreen(viewModel: SignUpViewModel = viewModel()) {
 
 The pattern is always the same four lines:
 
-| Compose parameter | Bind to |
-|---|---|
-| `value` | `field.value` |
-| `onValueChange` | `{ field.value = it }` |
-| `isError` / `supportingText` | `field.error` |
-| `Modifier.onBlur { }` | `field.blur()` |
+| Compose parameter            | Bind to                |
+|------------------------------|------------------------|
+| `value`                      | `field.value`          |
+| `onValueChange`              | `{ field.value = it }` |
+| `isError` / `supportingText` | `field.error`          |
+| `Modifier.onBlur { }`        | `field.blur()`         |
 
-Because `value` and `error` are backed by Compose state, reading them inside a composable subscribes that composable to changes. Nothing else is required.
+Because `value` and `error` are backed by Compose state, reading them inside a composable subscribes
+that composable to changes. Nothing else is required.
 
 ## The `onBlur` modifier
 
@@ -158,7 +164,9 @@ Because `value` and `error` are backed by Compose state, reading them inside a c
 fun Modifier.onBlur(onBlur: () -> Unit): Modifier
 ```
 
-Compose has no built-in "lost focus" callback. `onBlur` remembers whether the element was focused and calls your lambda on the **focused → unfocused** transition only. It does not fire on first composition or when the field is focused.
+Compose has no built-in "lost focus" callback. `onBlur` remembers whether the element was focused
+and calls your lambda on the **focused → unfocused** transition only. It does not fire on first
+composition or when the field is focused.
 
 ```kotlin
 OutlinedTextField(
@@ -167,7 +175,9 @@ OutlinedTextField(
 )
 ```
 
-Apply it to the focusable element (`TextField`, `OutlinedTextField`, `BasicTextField`, or a custom `focusable()` component). Without it, `validateOnBlur` has no effect, because `blur()` is never called.
+Apply it to the focusable element (`TextField`, `OutlinedTextField`, `BasicTextField`, or a custom
+`focusable()` component). Without it, `validateOnBlur` has no effect, because `blur()` is never
+called.
 
 ## Next
 

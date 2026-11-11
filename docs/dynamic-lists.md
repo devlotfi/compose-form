@@ -1,13 +1,14 @@
 # 5. Dynamic lists
 
-Use a list when the user can add and remove repeating groups: contacts, phone numbers, line items, education entries, etc.
+Use a list when the user can add and remove repeating groups: contacts, phone numbers, line items,
+education entries, etc.
 
 There are two techniques:
 
-| Technique | Use when |
-|---|---|
-| **A. List of sub-forms** (`mutableStateListOf<ItemForm>`) | Each item has its own field(s) with their own validation |
-| **B. One field holding a `List<T>`** | Items are simple values (tags, selected ids) validated as a whole |
+| Technique                                                 | Use when                                                          |
+|-----------------------------------------------------------|-------------------------------------------------------------------|
+| **A. List of sub-forms** (`mutableStateListOf<ItemForm>`) | Each item has its own field(s) with their own validation          |
+| **B. One field holding a `List<T>`**                      | Items are simple values (tags, selected ids) validated as a whole |
 
 ---
 
@@ -65,7 +66,8 @@ class MainForm : KonformFormDefinition() {
 }
 ```
 
-Why `mutableStateListOf`? Compose must be told when the list changes. A normal `MutableList` would add items without recomposing the UI.
+Why `mutableStateListOf`? Compose must be told when the list changes. A normal `MutableList` would
+add items without recomposing the UI.
 
 ### 3. Render with `forEach`/`items`
 
@@ -89,11 +91,15 @@ fun ContactsSection(form: MainForm) {
 }
 ```
 
-`key(contact)` matters when items can be removed from the middle: without it, Compose reuses the UI by position and focus/IME state can jump to the wrong row. Inside a `LazyColumn`, use `items(form.contacts, key = { it })` instead.
+`key(contact)` matters when items can be removed from the middle: without it, Compose reuses the UI
+by position and focus/IME state can jump to the wrong row. Inside a `LazyColumn`, use
+`items(form.contacts, key = { it })` instead.
 
 ### Why `dispose()` is required
 
-Every field of `ContactForm` was registered on `MainForm.fields` when the item was created. Removing the item from the **list** only removes it from the UI. Its fields are still in `MainForm.fields`. Consequences if you forget:
+Every field of `ContactForm` was registered on `MainForm.fields` when the item was created. Removing
+the item from the **list** only removes it from the UI. Its fields are still in `MainForm.fields`.
+Consequences if you forget:
 
 - `form.submit()` keeps validating the removed, invisible fields.
 - A removed item with an error blocks submission with no visible reason.
@@ -156,7 +162,9 @@ fun trySubmit() {
 
 ### Nested sub-forms inside list items
 
-If each list item itself contains sub-forms (e.g., a contact with an address), pass the **root** to the grandchild and dispose it with the item (see [multiple levels of nesting](nested-forms.md#multiple-levels-of-nesting)):
+If each list item itself contains sub-forms (e.g., a contact with an address), pass the **root** to
+the grandchild and dispose it with the item
+(see [multiple levels of nesting](nested-forms.md#multiple-levels-of-nesting)):
 
 ```kotlin
 class ContactForm(private val root: KonformFormDefinition) :
@@ -245,20 +253,22 @@ fun TagsInput(form: ArticleForm) {
 }
 ```
 
-Replace the list on every change (`value = value + x`). Mutating a `MutableList` in place does not trigger recomposition or validation.
+Replace the list on every change (`value = value + x`). Mutating a `MutableList` in place does not
+trigger recomposition or validation.
 
-With **Kanyon**, validate lists with its list/`isOf` support and custom handlers; see the Kanyon page on nested structures: <https://devlotfi.github.io/kanyon/nested-structures.md>.
+With **Kanyon**, validate lists with its list/`isOf` support and custom handlers; see the Kanyon
+page on nested structures: <https://devlotfi.github.io/kanyon/nested-structures.md>.
 
 ---
 
 ## Choosing between A and B
 
-| Question | A (sub-forms) | B (one field) |
-|---|---|---|
-| Items have multiple inputs | ✅ | ❌ |
-| Per-item error under each input | ✅ | ❌ (one error for the whole list) |
-| Items are simple (strings, ids) | works | ✅ simplest |
-| Need add/remove with focus handling | ✅ | n/a |
+| Question                            | A (sub-forms) | B (one field)                     |
+|-------------------------------------|---------------|-----------------------------------|
+| Items have multiple inputs          | ✅            | ❌                                |
+| Per-item error under each input     | ✅            | ❌ (one error for the whole list) |
+| Items are simple (strings, ids)     | works         | ✅ simplest                       |
+| Need add/remove with focus handling | ✅            | n/a                               |
 
 ## Next
 

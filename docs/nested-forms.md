@@ -1,15 +1,18 @@
 # 4. Nested forms
 
-Real forms are rarely flat. compose-form models grouping with **sub-forms**: a sub-form is just another `FormDefinition` that is given a *parent*.
+Real forms are rarely flat. compose-form models grouping with **sub-forms**: a sub-form is just
+another `FormDefinition` that is given a *parent*.
 
 ## How registration works
 
 Every form keeps a `fields` set. When a field is declared:
 
 1. it is added to the **declaring form's** `fields`, and
-2. if the declaring form has a `root` (the `parent` you passed to its constructor), it is **also** added to `root.fields`.
+2. if the declaring form has a `root` (the `parent` you passed to its constructor), it is **also**
+   added to `root.fields`.
 
-So the root form sees every field of its direct children, and `root.validate()`, `root.submit()` and `root.reset()` operate on all of them at once.
+So the root form sees every field of its direct children, and `root.validate()`, `root.submit()` and
+`root.reset()` operate on all of them at once.
 
 ```text
 SignUpForm (root)                      fields = { firstName, lastName, street, city }
@@ -80,7 +83,8 @@ fun CheckoutScreen(form: CheckoutForm) {
 
 (`FormTextField` is the reusable component from [Recipes](recipes.md#a-reusable-text-field).)
 
-`form.submit()` validates `fullName` **and** all address fields. If you only want to validate the address group, call `form.address.validate()`. That validates the sub-form's own fields.
+`form.submit()` validates `fullName` **and** all address fields. If you only want to validate the
+address group, call `form.address.validate()`. That validates the sub-form's own fields.
 
 ## Sub-form with its own submit
 
@@ -103,7 +107,8 @@ Button(onClick = { form.submit() }) { Text("Finish") }
 
 ## Timing flags are per form
 
-Each sub-form has its own `validateOnChange` / `validateOnBlur`. A sub-form does **not** inherit them from its parent:
+Each sub-form has its own `validateOnChange` / `validateOnBlur`. A sub-form does **not** inherit
+them from its parent:
 
 ```kotlin
 class AddressForm(parent: KonformFormDefinition) : KonformFormDefinition(parent = parent) {
@@ -116,14 +121,15 @@ With `KanyonFormDefinition` you can also pass them through the constructor.
 
 ## Multiple levels of nesting
 
-A field registers with **its declaring form and that form's direct `root`** only. This has an important consequence.
+A field registers with **its declaring form and that form's direct `root`** only. This has an
+important consequence.
 
-| Layout | Does `root.validate()` see the field? |
-|---|---|
-| Field on the root | Yes |
-| Field on a child, `parent = root` | Yes |
+| Layout                                  | Does `root.validate()` see the field? |
+|-----------------------------------------|---------------------------------------|
+| Field on the root                       | Yes                                   |
+| Field on a child, `parent = root`       | Yes                                   |
 | Field on a grandchild, `parent = child` | **No** (registered only on the child) |
-| Field on a grandchild, `parent = root` | Yes |
+| Field on a grandchild, `parent = root`  | Yes                                   |
 
 **Rule: always pass the top-level form as `parent`, however deep the sub-form is nested.**
 
@@ -142,7 +148,9 @@ class MainForm : KonformFormDefinition() {
 
 Now `MainForm.validate()` covers `contact.name` and `contact.address.*`.
 
-The flip side: when a mid-level form is **disposed** (removed from a list), its grandchildren stay registered on the root unless you dispose them too. See [Dynamic lists](dynamic-lists.md#nested-sub-forms-inside-list-items).
+The flip side: when a mid-level form is **disposed** (removed from a list), its grandchildren stay
+registered on the root unless you dispose them too.
+See [Dynamic lists](dynamic-lists.md#nested-sub-forms-inside-list-items).
 
 ## Reusing a sub-form in several places
 

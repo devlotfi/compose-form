@@ -1,6 +1,7 @@
 # 2. Validation setup
 
-compose-form does **not** ship with a validator. It only needs to know one thing: *"given a value and a schema, what is the error message (or `null`)?"*
+compose-form does **not** ship with a validator. It only needs to know one thing: *"given a value
+and a schema, what is the error message (or `null`)?"*
 
 That question is the single abstract function on `FormDefinition<S>`:
 
@@ -10,9 +11,11 @@ abstract fun <T> validateField(value: T, schema: S?): String?
 
 - `S` is the schema type of your validation library.
 - Return `null` when the value is valid, or the error message to display.
-- `schema` is `null` when the field was declared without a schema block. Return `null` in that case (no rules means always valid).
+- `schema` is `null` when the field was declared without a schema block. Return `null` in that case
+  (no rules means always valid).
 
-The `formField { ... }` schema block must return an `S`. That is how the schema ends up typed as your library's type.
+The `formField { ... }` schema block must return an `S`. That is how the schema ends up typed as
+your library's type.
 
 ```text
 formField("") { <S> }  ──►  FormFieldData.schema : S?
@@ -49,11 +52,14 @@ abstract class KonformFormDefinition(parent: FormDefinition<Validation<*>>? = nu
 
 What it does:
 
-1. Casts the stored `Validation<*>` back to `Validation<T>` (safe as long as the schema you declare matches the field type).
+1. Casts the stored `Validation<*>` back to `Validation<T>` (safe as long as the schema you declare
+   matches the field type).
 2. Runs it.
-3. Shows the **first** error only. If you want to show all errors joined, replace `firstOrNull()` with `result?.errors?.joinToString("\n") { it.message }`.
+3. Shows the **first** error only. If you want to show all errors joined, replace `firstOrNull()`
+   with `result?.errors?.joinToString("\n") { it.message }`.
 
-> Constructor note: `parent` is how a sub-form registers with its parent form. Top-level forms use the default `null`. See [Nested forms](nested-forms.md).
+> Constructor note: `parent` is how a sub-form registers with its parent form. Top-level forms use
+> the default `null`. See [Nested forms](nested-forms.md).
 
 ### Using it
 
@@ -86,7 +92,9 @@ class ProfileForm : KonformFormDefinition() {
 }
 ```
 
-Type rule: **the type argument of `Validation<...>` must equal the field type.** `formField("")` is a `String` field, so use `Validation<String>`. A mismatch compiles but the cast in `validateField` yields `null` for the wrong type and the field is silently treated as valid.
+Type rule: **the type argument of `Validation<...>` must equal the field type.** `formField("")` is
+a `String` field, so use `Validation<String>`. A mismatch compiles but the cast in `validateField`
+yields `null` for the wrong type and the field is silently treated as valid.
 
 ### Configuring timing with Konform
 
@@ -106,7 +114,9 @@ class ProfileForm : KonformFormDefinition() {
 
 ## Kanyon
 
-[Kanyon](https://devlotfi.github.io/kanyon/llms.txt) is a declarative Kotlin validation library built on composable `FieldSchema` objects. A built schema is a `FieldSchema` whose `validate(value)` returns `null` (valid) or an error message `String`, which fits `validateField` directly.
+[Kanyon](https://devlotfi.github.io/kanyon/llms.txt) is a declarative Kotlin validation library
+built on composable `FieldSchema` objects. A built schema is a `FieldSchema` whose `validate(value)`
+returns `null` (valid) or an error message `String`, which fits `validateField` directly.
 
 ### The adapter
 
@@ -126,9 +136,12 @@ abstract class KanyonFormDefinition(
 }
 ```
 
-> `FormDefinition`'s constructor order is `(validateOnChange, validateOnBlur, root)`, so pass the arguments **by name** as above. Passing `parent` positionally as the first argument would not compile.
+> `FormDefinition`'s constructor order is `(validateOnChange, validateOnBlur, root)`, so pass the
+> arguments **by name** as above. Passing `parent` positionally as the first argument would not
+> compile.
 
-Unlike the Konform adapter, this one exposes `validateOnChange` and `validateOnBlur` as constructor parameters, so sub-classes can configure timing without an `init` block:
+Unlike the Konform adapter, this one exposes `validateOnChange` and `validateOnBlur` as constructor
+parameters, so sub-classes can configure timing without an `init` block:
 
 ```kotlin
 class ProfileForm : KanyonFormDefinition(validateOnChange = false) { /* ... */ }
@@ -179,8 +192,11 @@ class ProfileForm : KanyonFormDefinition() {
 
 Kanyon-specific rules to keep in mind (from the Kanyon docs):
 
-- **Types are strict.** `int()` does not accept a `Long` or `Double`. Make the field's Kotlin type match the schema method (`formField(18)` is `Int` so use `.int()`; `formField(18L)` needs `.long()`).
-- **`null` is rejected by default.** For optional fields use a nullable field type and call `nullable()`:
+- **Types are strict.** `int()` does not accept a `Long` or `Double`. Make the field's Kotlin type
+  match the schema method (`formField(18)` is `Int` so use `.int()`; `formField(18L)` needs
+  `.long()`).
+- **`null` is rejected by default.** For optional fields use a nullable field type and call
+  `nullable()`:
 
 ```kotlin
 val nickname by formField<String?>(null) {
@@ -191,7 +207,8 @@ val nickname by formField<String?>(null) {
 - **One type method per `FieldSchema`.** Do not chain `.string().int()`.
 - Always call `.build()`; the form needs a `FieldSchema`, not an intermediate typed schema.
 
-See the Kanyon docs for the full rule list (identifiers, network, dates, finance, custom handlers, ...): <https://devlotfi.github.io/kanyon/llms.txt>.
+See the Kanyon docs for the full rule list (identifiers, network, dates, finance, custom
+handlers, ...): <https://devlotfi.github.io/kanyon/llms.txt>.
 
 ---
 
@@ -253,19 +270,21 @@ class QuickForm : RulesFormDefinition() {
 
 ### Adapter checklist
 
-| Requirement | Why |
-|---|---|
-| Constructor takes `parent: FormDefinition<S>? = null` and passes it as `root = parent` | Lets sub-forms register their fields with the parent form. |
-| Handle `schema == null` | Fields without a schema block must not crash. |
-| Return **`null`** for valid | Anything non-null is treated as an error and blocks `submit()`. |
-| Return a **display-ready** message | The string is shown as-is (`field.error`). |
-| Do not throw | An exception inside `validateField` propagates out of `field.value = ...`. |
+| Requirement                                                                            | Why                                                                        |
+|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| Constructor takes `parent: FormDefinition<S>? = null` and passes it as `root = parent` | Lets sub-forms register their fields with the parent form.                 |
+| Handle `schema == null`                                                                | Fields without a schema block must not crash.                              |
+| Return **`null`** for valid                                                            | Anything non-null is treated as an error and blocks `submit()`.            |
+| Return a **display-ready** message                                                     | The string is shown as-is (`field.error`).                                 |
+| Do not throw                                                                           | An exception inside `validateField` propagates out of `field.value = ...`. |
 
 ---
 
 ## Mixing validators?
 
-All fields in one form share the same `S`, and sub-forms must share their parent's `S`. If you need two validators in one app, use different adapters in different forms. Keep each form tree on one adapter.
+All fields in one form share the same `S`, and sub-forms must share their parent's `S`. If you need
+two validators in one app, use different adapters in different forms. Keep each form tree on one
+adapter.
 
 ## Next
 
