@@ -7,7 +7,9 @@ plugins {
 android {
   namespace = "com.github.devlotfi.composeform"
   compileSdk {
-    version = release(37)
+    version = release(37) {
+      minorApiLevel = 2
+    }
   }
   defaultConfig {
     minSdk = 33
