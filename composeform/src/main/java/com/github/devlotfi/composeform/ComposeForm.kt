@@ -81,7 +81,6 @@ class TextFormFieldData<S>(
   val state = TextFieldState(initialValue)
 
   val inputTransformation = InputTransformation {
-    // `this` is TextFieldBuffer here, so delegate to the field
     if (thisRef.validateOnChange) validateText(asCharSequence().toString())
   }
 
@@ -89,12 +88,12 @@ class TextFormFieldData<S>(
     error = thisRef.validateField(text, schema)
   }
 
-  override val value: String get() = state.text.toString()
-
-  fun setValue(newValue: String) {
-    state.setTextAndPlaceCursorAtEnd(newValue)
-    if (thisRef.validateOnChange) validate()
-  }
+  override var value: String
+    get() = state.text.toString()
+    set(newValue) {
+      state.setTextAndPlaceCursorAtEnd(newValue)
+      if (thisRef.validateOnChange) validate()
+    }
 
   override fun resetValue() {
     state.setTextAndPlaceCursorAtEnd(initialValue)
